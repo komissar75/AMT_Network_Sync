@@ -22,13 +22,20 @@ def net_meshcmd():
     #print(result.stdout.decode())
     amt_result_list = result.stdout.decode().splitlines()
     amt_version = amt_result_list[0].split(",")[0]
-    amt_status = amt_result_list[0].split(",")[1].strip()
+    if amt_result_list[0].split(",")[1].strip()[-1] == ".":
+        amt_status = amt_result_list[0].split(",")[1].strip()[0:-1]
+    else:
+        amt_status = amt_result_list[0].split(",")[1].strip()
     print("AMT version: " + amt_version)
     print("AMT status: " + amt_status)
-    #print(amt_result_list)
-    #net_result = subprocess.run([meshcmd_path, 'AmtNetwork', '--user', amt_user, '--password', amt_password], stdout=subprocess.PIPE)
-    #print(type(net_result.stdout.decode()))
-    #sys_result = subprocess.run(['ip', '-o', '-f', 'inet', 'address'], stdout=subprocess.PIPE)
+    list_len = len(amt_result_list[1].split(", "))
+    if amt_result_list[1].split(", ")[0] == "Wired Enabled":
+        amt_ip_mode = amt_result_list[1].split(", ")[1]
+        if list_len >=3: amt_mac = amt_result_list[1].split(", ")[2].replace(".", "")
+        if list_len >=4: amt_ip = amt_result_list[1].split(", ")[3][0:-1]
+    print("AMT ip mode is: "+ amt_ip_mode)
+    if list_len >=3: print("AMT MAC is: " + amt_mac)
+    if list_len >=4: print("AMT IP is: " + amt_ip)
     sys_result_list = subprocess.run(['ip', '-o', '-f', 'inet', 'address'], stdout=subprocess.PIPE).stdout.decode().splitlines()
     #print(sys_result_list[0][3:5])
     if len(sys.argv) == 1:
