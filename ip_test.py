@@ -6,6 +6,16 @@ meshcmd_path = "/home/komissar/Downloads/meshcmd"
 amt_user = "admin"
 amt_password = "P@ssw0rd"
 
+amt_status ="" #activated or not
+amt_ip_mode = "" #static or dynamic
+amt_mac = ""
+amt_ip = ""
+amt_mask = ""
+amt_gate = ""
+amt_dns = ""
+amt_dns2 = ""
+
+
 def net_meshcmd():
     #check AMT status
     result = subprocess.run([meshcmd_path, 'AmtInfo'], stdout=subprocess.PIPE)
