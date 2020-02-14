@@ -18,6 +18,15 @@ amt_dns2 = ""
 
 def net_meshcmd():
     #check AMT status
+    global amt_version
+    global amt_status
+    global amt_ip_mode
+    global amt_mac
+    global amt_ip
+    global amt_mask
+    global amt_gate
+    global amt_dns
+    global amt_dns2
     result = subprocess.run([meshcmd_path, 'AmtInfo'], stdout=subprocess.PIPE)
     #print(result.stdout.decode())
     amt_result_list = result.stdout.decode().splitlines()
@@ -34,20 +43,21 @@ def net_meshcmd():
         if list_len >=3: amt_mac = amt_result_list[1].split(", ")[2].replace(".", "")
         if list_len >=4: amt_ip = amt_result_list[1].split(", ")[3][0:-1]
     print("AMT ip mode is: "+ amt_ip_mode)
-    if list_len >=3: print("AMT MAC is: " + amt_mac)
-    if list_len >=4: print("AMT IP is: " + amt_ip)
+    if amt_mac != '': print("AMT MAC is: " + amt_mac)
+    if amt_ip != '': print("AMT IP is: " + amt_ip)
+    net_result = subprocess.run([meshcmd_path, 'AmtNetwork', '--user', amt_user, '--password', amt_password], stdout=subprocess.PIPE)
+    amt_ip_result_list = net_result.stdout.decode().splitlines()
+    print(amt_ip_result_list)
     sys_result_list = subprocess.run(['ip', '-o', '-f', 'inet', 'address'], stdout=subprocess.PIPE).stdout.decode().splitlines()
     #print(sys_result_list[0][3:5])
-    if len(sys.argv) == 1:
+    #if len(sys.argv) == 1:
         #print("AMT status is:")
         #for i in amt_result_list:
         #    print(i)
-        print("Loclal system IP conf is:")
-        for i in sys_result_list:
-            if i[3:5] != "lo":
-                print(i)
-        
-    
+        #print("Loclal system IP conf is:")
+        #for i in sys_result_list:
+            #if i[3:5] != "lo":
+                #print(i)
 
 net_meshcmd()
 #print(sys.argv)
