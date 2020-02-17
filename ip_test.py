@@ -14,10 +14,16 @@ amt_mask = ""
 amt_gate = ""
 amt_dns = ""
 amt_dns2 = ""
-
+system_devise = ""
+system_ip_mode = "" #static or dynamic
+system_mac = ""
+system_ip = ""
+system_mask = ""
+system_gate = ""
+system_dns = ""
+system_dns2 = ""
 
 def net_meshcmd():
-    #check AMT status
     global amt_version
     global amt_status
     global amt_ip_mode
@@ -27,7 +33,15 @@ def net_meshcmd():
     global amt_gate
     global amt_dns
     global amt_dns2
-    result = subprocess.run([meshcmd_path, 'AmtInfo'], stdout=subprocess.PIPE)
+    global system_devise
+    global system_ip_mode 
+    global system_mac
+    global system_ip
+    global system_mask
+    global system_gate
+    global system_dns
+    global system_dns2
+    result = subprocess.run([meshcmd_path, 'AmtInfo'], stdout=subprocess.PIPE) #check AMT status
     #print(result.stdout.decode())
     amt_result_list = result.stdout.decode().splitlines()
     amt_version = amt_result_list[0].split(",")[0]
@@ -48,16 +62,26 @@ def net_meshcmd():
     net_result = subprocess.run([meshcmd_path, 'AmtNetwork', '--user', amt_user, '--password', amt_password], stdout=subprocess.PIPE)
     amt_ip_result_list = net_result.stdout.decode().splitlines()
     print(amt_ip_result_list)
-    sys_result_list = subprocess.run(['ip', '-o', '-f', 'inet', 'address'], stdout=subprocess.PIPE).stdout.decode().splitlines()
-    #print(sys_result_list[0][3:5])
-    #if len(sys.argv) == 1:
-        #print("AMT status is:")
-        #for i in amt_result_list:
-        #    print(i)
-        #print("Loclal system IP conf is:")
-        #for i in sys_result_list:
-            #if i[3:5] != "lo":
-                #print(i)
+    sys_link_list = subprocess.run(['ip', '-o', 'link'], stdout=subprocess.PIPE).stdout.decode().splitlines()
+    for i in sys_link_list:
+        if i.count(amt_mac.casefold()) == 1:
+            system_devise = i.split(": ")[1]
+            if i.count("state DOWN") == 1: 
+                print("Wired link is down")
+                return
+    print(system_devise)
+    if system_devise != "":
+        sys_inet_str = subprocess.run(['ip', '-o', '-f', 'inet', 'address', 'show', system_devise], stdout=subprocess.PIPE).stdout.decode()
+        if sys_inet_str == "":
+            system_ip_mode = "Dynamic"
+        else:
+            if sys_inet_str.count("dynamic") == 1:
+                system_ip_mode = "Dynamic"
+            else:
+                system_ip_mode = "Static"
+        
+    print(system_ip_mode)
+    
 
 net_meshcmd()
 #print(sys.argv)
