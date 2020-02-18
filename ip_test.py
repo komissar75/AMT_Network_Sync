@@ -1,6 +1,8 @@
 import sys
 #import os
 import subprocess
+import socket
+import struct
 
 meshcmd_path = "/home/komissar/Downloads/meshcmd"
 amt_user = "admin"
@@ -56,12 +58,25 @@ def net_meshcmd():
         amt_ip_mode = amt_result_list[1].split(", ")[1]
         if list_len >=3: amt_mac = amt_result_list[1].split(", ")[2].replace(".", "")
         if list_len >=4: amt_ip = amt_result_list[1].split(", ")[3][0:-1]
+    else:
+        print("wired interface not enabled")
+        return
     print("AMT ip mode is: "+ amt_ip_mode)
     if amt_mac != '': print("AMT MAC is: " + amt_mac)
     if amt_ip != '': print("AMT IP is: " + amt_ip)
     net_result = subprocess.run([meshcmd_path, 'AmtNetwork', '--user', amt_user, '--password', amt_password], stdout=subprocess.PIPE)
     amt_ip_result_list = net_result.stdout.decode().splitlines()
-    print(amt_ip_result_list)
+    #print(amt_ip_result_list)
+    for i in amt_ip_result_list:
+        if i.count("WIRELESS") == 1: break
+        if i.split(": ")[0].count("DefaultGateway") == 1: amt_gate = i.split(": ")[1]
+        elif i.split(": ")[0].count("PrimaryDNS") == 1: amt_dns = i.split(": ")[1]
+        elif i.split(": ")[0].count("SecondaryDNS") == 1: amt_dns2 = i.split(": ")[1]
+        elif i.split(": ")[0].count("SubnetMask") == 1: amt_mask = i.split(": ")[1]
+    print("AMT Gate is: " + amt_gate)
+    print("AMT Primary DNS is: " + amt_dns)
+    print("AMT Scondary DNS is: " + amt_dns2)
+    print("AMT Subnet Mask is: " + amt_mask)
     sys_link_list = subprocess.run(['ip', '-o', 'link'], stdout=subprocess.PIPE).stdout.decode().splitlines()
     for i in sys_link_list:
         if i.count(amt_mac.casefold()) == 1:
@@ -69,7 +84,7 @@ def net_meshcmd():
             if i.count("state DOWN") == 1: 
                 print("Wired link is down")
                 return
-    print(system_devise)
+    #print(system_devise)
     if system_devise != "":
         sys_inet_str = subprocess.run(['ip', '-o', '-f', 'inet', 'address', 'show', system_devise], stdout=subprocess.PIPE).stdout.decode()
         if sys_inet_str == "":
@@ -79,8 +94,21 @@ def net_meshcmd():
                 system_ip_mode = "Dynamic"
             else:
                 system_ip_mode = "Static"
-        
-    print(system_ip_mode)
+            sys_ip_str = subprocess.run(['nmcli', '-t', '-f', 'IP4.ADDRESS', 'device', 'show', system_devise], stdout=subprocess.PIPE).stdout.decode().splitlines()[0]
+            system_ip = sys_ip_str.split(":")[1].split("/")[0]
+            system_mask = socket.inet_ntoa(struct.pack('!I', (1 << 32) - (1 << (32 - int(sys_ip_str.split(":")[1].split("/")[1])))))
+            system_gate = subprocess.run(['nmcli', '-t', '-f', 'IP4.GATEWAY', 'device', 'show', system_devise], stdout=subprocess.PIPE).stdout.decode().splitlines()[0].split(":")[1]
+            sys_dns_list = subprocess.run(['nmcli', '-t', '-f', 'IP4.DNS', 'device', 'show', system_devise], stdout=subprocess.PIPE).stdout.decode().splitlines()
+            if len(sys_dns_list) >= 1: system_dns = sys_dns_list[0].split(":")[1]
+            if len(sys_dns_list) >= 2: system_dns2 = sys_dns_list[1].split(":")[1]
+            #system_dns = subprocess.run(['nmcli', '-t', '-f', 'IP4.DNS', 'device', 'show', system_devise], stdout=subprocess.PIPE).stdout.decode().splitlines()[0].split(":")[1]
+            #system_dns2 = subprocess.run(['nmcli', '-t', '-f', 'IP4.DNS', 'device', 'show', system_devise], stdout=subprocess.PIPE).stdout.decode().splitlines()[2].split(":")[1]
+    print("System IP mode is: " + system_ip_mode)
+    print("System IP is: " + system_ip)
+    print("System GATE is: " + system_gate)
+    print("System Primary DNS is: " + system_dns)
+    print("System Secondary DNS is: " + system_dns2)
+    print("System Subnet Mask is: " + system_mask)
     
 
 net_meshcmd()
