@@ -7,4 +7,4 @@ Python script have to be run as sudo due to meshcmd requirements.
 For example: 
 $sudo python3 ip_test.py
 
-Inital stage is to print AMT and System configs
+Script compare IP seetings of AMT and Linux system (ubuntu 18.04) and change AMT seetings in accordance with system settings
