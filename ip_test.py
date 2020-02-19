@@ -46,18 +46,20 @@ def net_meshcmd():
     result = subprocess.run([meshcmd_path, 'AmtInfo'], stdout=subprocess.PIPE) #check AMT status
     #print(result.stdout.decode())
     amt_result_list = result.stdout.decode().splitlines()
-    amt_version = amt_result_list[0].split(",")[0]
-    if amt_result_list[0].split(",")[1].strip()[-1] == ".":
-        amt_status = amt_result_list[0].split(",")[1].strip()[0:-1]
+    #print(amt_result_list)
+    amt_version = amt_result_list[0].split(", ")[0]
+    if amt_result_list[0].split(", ")[1][-1] == ".":
+        amt_status = amt_result_list[0].split(", ")[1][0:-1]
     else:
-        amt_status = amt_result_list[0].split(",")[1].strip()
+        amt_status = amt_result_list[0].split(", ")[1]
     print("AMT version: " + amt_version)
     print("AMT status: " + amt_status)
     list_len = len(amt_result_list[1].split(", "))
     if amt_result_list[1].split(", ")[0] == "Wired Enabled":
-        amt_ip_mode = amt_result_list[1].split(", ")[1]
+        if amt_result_list[1].split(", ")[1] == "DHCP": amt_ip_mode = "Dynamic"
+        else: amt_ip_mode = amt_result_list[1].split(", ")[1]
         if list_len >=3: amt_mac = amt_result_list[1].split(", ")[2].replace(".", "")
-        if list_len >=4: amt_ip = amt_result_list[1].split(", ")[3][0:-1]
+        if list_len >=4: amt_ip = amt_result_list[1].split(", ")[3]
     else:
         print("wired interface not enabled")
         return
@@ -109,7 +111,30 @@ def net_meshcmd():
     print("System Primary DNS is: " + system_dns)
     print("System Secondary DNS is: " + system_dns2)
     print("System Subnet Mask is: " + system_mask)
-    
+    if amt_ip_mode == "Dynamic" and system_ip_mode == "Dynamic":
+        print("AMT and System IP settings are synced.")
+        return
+    elif amt_ip_mode == "Static" and system_ip_mode == "Dynamic":
+        print("Changing AMT IP mode to Dynamic...")
+        ip_change = subprocess.run([meshcmd_path, 'AmtNetwork', '--user', amt_user, '--password', amt_password, "--dhcp"], stdout=subprocess.PIPE)
+        print(ip_change.stdout.decode())
+        return
+    elif amt_ip_mode == "Static" and system_ip_mode == "Static":
+        if amt_ip == system_ip and amt_mask == system_mask and amt_gate == system_gate and amt_dns == system_dns and amt_dns2 == system_dns2:
+            print("AMT and System IP settings are synced.")
+            return
+        else:
+            print("Changing AMT IP settings...")
+            ip_change = subprocess.run([meshcmd_path, 'AmtNetwork', '--user', amt_user, '--password', amt_password, "--dhcp"], stdout=subprocess.PIPE)
+            print(meshcmd_path + " " + 'AmtNetwork' + " " + '--user' + " " + amt_user + " " + '--password' + " " + amt_password + " " + "--static" + " " + "--ip" + " " + system_ip + " " + "--subnet" + " " + system_mask + " " + "--gateway" + " " + system_gate + " " + "--dns" + " " + system_dns + " " + "--dns2" + " " + system_dns2)
+            ip_change = subprocess.run([meshcmd_path, 'AmtNetwork', '--user', amt_user, '--password', amt_password, "--static", "--ip", system_ip, "--subnet", system_mask, "--gateway", system_gate, "--dns", system_dns, "--dns2", system_dns2], stdout=subprocess.PIPE)
+            print(ip_change.stdout.decode())
+            return
+    elif amt_ip_mode == "Dynamic" and system_ip_mode == "Static":
+        print("Changing AMT IP settings...")
+        ip_change = subprocess.run([meshcmd_path, 'AmtNetwork', '--user', amt_user, '--password', amt_password, "--static", "--ip", system_ip, "--subnet", system_mask, "--gateway", system_gate, "--dns", system_dns, "--dns2", system_dns2], stdout=subprocess.PIPE)
+        print(ip_change.stdout.decode())
+        return
 
 net_meshcmd()
 #print(sys.argv)
