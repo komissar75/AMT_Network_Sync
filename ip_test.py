@@ -111,6 +111,9 @@ def net_meshcmd():
     print("System Primary DNS is: " + system_dns)
     print("System Secondary DNS is: " + system_dns2)
     print("System Subnet Mask is: " + system_mask)
+    if amt_status.count("activated") == 0 :
+        print("AMT is not activated, sync is not available")
+        return
     if amt_ip_mode == "Dynamic" and system_ip_mode == "Dynamic":
         print("AMT and System IP settings are synced.")
         return
