@@ -8,3 +8,7 @@ For example:
 $sudo python3 ip_test.py
 
 Script compare IP seetings of AMT and Linux system (ubuntu 18.04) and change AMT seetings in accordance with system settings
+
+
+check_remote_amt_pwr.py
+this script also require mescmd utility and amt_list.txt file with the list of ip addresses or FQDN. One address or FQDN per line
